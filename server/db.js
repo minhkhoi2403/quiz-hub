@@ -9,8 +9,16 @@ export async function openDatabase({ url = process.env.DATABASE_URL, file = proc
     const pool = new pg.Pool({ ...(url ? { connectionString: url } : {}), max: 10 });
     db = { query: async (sql, args = []) => (await pool.query(sql, args)).rows, close: () => pool.end() };
   } else {
-    if (file !== ':memory:') mkdirSync(dirname(file), { recursive: true });
-    const sqlite = new DatabaseSync(file);
+    let dbFile = file;
+    if (dbFile !== ':memory:') {
+      try {
+        mkdirSync(dirname(dbFile), { recursive: true });
+      } catch {
+        dbFile = '/tmp/quizhub.db';
+        try { mkdirSync(dirname(dbFile), { recursive: true }); } catch {}
+      }
+    }
+    const sqlite = new DatabaseSync(dbFile);
     sqlite.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
     db = { query: async (sql, args = []) => {
       const ordered = [];

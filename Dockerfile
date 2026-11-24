@@ -1,5 +1,6 @@
 FROM node:24-bookworm-slim
 WORKDIR /app
+RUN mkdir -p /app/data && chown -R node:node /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --chown=node:node server ./server
